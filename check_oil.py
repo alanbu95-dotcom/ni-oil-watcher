@@ -29,10 +29,10 @@ def fetch_local_best_quote():
     bt_match = re.search(r"Showing\s+\d+\s+quotes\s+for\s+(BT\d+)", text, re.IGNORECASE)
     area_label = bt_match.group(1).upper() if bt_match else AREA_SLUG.replace("-", " ").title()
 
-    # Match each supplier block:
-    # "| Port Fuels | Updated 40 minutes ago | <any columns without £ or Updated> | £491.99"
+    # Match each supplier block specifically at the "500 L" / "500 litres" column:
+    # "... | Port Fuels | Updated 40 minutes ago | ... | 500 L | £491.99"
     pattern = re.compile(
-        r"\|\s*([^|]{2,45}?)\s*\|\s*Updated\s+[^|]+\|([^£]{1,140}?)£\s*(\d{3}(?:\.\d{2})?)",
+        r"\|\s*([^|]{2,45}?)\s*\|\s*Updated\s+[^|]+\|([^|]+(?:\|[^|]+){0,8}?)\|\s*500\s*(?:L|litres):?\s*\|\s*£\s*(\d{3}(?:\.\d{2})?)",
         re.IGNORECASE,
     )
 
@@ -45,18 +45,29 @@ def fetch_local_best_quote():
         # Ensure we didn't cross into the next supplier row
         if "updated" in middle.lower():
             continue
-        if 350.0 <= price <= 750.0 and supplier.lower() not in ("supplier", "500 litres", "delivers to"):
+        if 380.0 <= price <= 750.0 and supplier.lower() not in ("supplier", "500 litres", "delivers to"):
             quotes.append((price, supplier))
 
     if not quotes:
-        # Print the exact table portion so we can see it in logs if anything ever changes
+        # Fallback: match "500 litres: £491.99 ... Supplier Name | Updated"
+        alt_pattern = re.compile(
+            r"500\s*(?:L|litres):?\s*\|?\s*£\s*(\d{3}(?:\.\d{2})?)[^|]*\|[^|]*\|\s*([^|]{2,45}?)\s*\|\s*Updated",
+            re.IGNORECASE,
+        )
+        for match in alt_pattern.finditer(text):
+            price = float(match.group(1))
+            supplier = match.group(2).strip()
+            if 380.0 <= price <= 750.0:
+                quotes.append((price, supplier))
+
+    if not quotes:
         idx = text.find("Showing ")
-        print("Table snippet:", text[idx:idx+700] if idx != -1 else text[:700])
-        raise RuntimeError(f"Could not parse supplier rows from {TARGET_URL}")
+        print("Table snippet:", text[idx:idx+800] if idx != -1 else text[:800])
+        raise RuntimeError(f"Could not parse 500L supplier rows from {TARGET_URL}")
 
     quotes.sort(key=lambda x: x[0])
     best_price, best_supplier = quotes[0]
-    print(f"Found {len(quotes)} quotes for {area_label}. Cheapest: {best_supplier} at £{best_price:.2f}")
+    print(f"Found {len(quotes)} quotes for {area_label}. Cheapest 500L: {best_supplier} at £{best_price:.2f}")
     return best_price, best_supplier, area_label
 
 def load_last_state():
