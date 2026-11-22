@@ -25,28 +25,35 @@ def fetch_local_best_quote():
     soup = BeautifulSoup(resp.text, "html.parser")
     text = soup.get_text(" | ", strip=True)
 
-    # Extract the postcode label if present (e.g., "Showing 23 quotes for BT28")
+    # Extract postcode label (e.g., "Showing 23 quotes for BT28")
     bt_match = re.search(r"Showing\s+\d+\s+quotes\s+for\s+(BT\d+)", text, re.IGNORECASE)
     area_label = bt_match.group(1).upper() if bt_match else AREA_SLUG.replace("-", " ").title()
 
-    # Exact row structure from CheapestOil's 500 Litres table:
-    # "... | Port Fuels | Updated 40 minutes ago | BT1 to BT30, BT36 to BT39 | £491.99 | ..."
+    # Match each supplier block:
+    # "| Port Fuels | Updated 40 minutes ago | <any columns without £ or Updated> | £491.99"
     pattern = re.compile(
-        r"\|\s*([^|]{2,45}?)\s*\|\s*Updated\s+[^|]+\|\s*BT[^|]+\|\s*£\s*(\d{3}(?:\.\d{2})?)",
+        r"\|\s*([^|]{2,45}?)\s*\|\s*Updated\s+[^|]+\|([^£]{1,140}?)£\s*(\d{3}(?:\.\d{2})?)",
         re.IGNORECASE,
     )
 
     quotes = []
     for match in pattern.finditer(text):
         supplier = match.group(1).strip()
-        price = float(match.group(2))
-        if 350.0 <= price <= 750.0 and supplier.lower() not in ("supplier", "500 litres"):
+        middle = match.group(2)
+        price = float(match.group(3))
+
+        # Ensure we didn't cross into the next supplier row
+        if "updated" in middle.lower():
+            continue
+        if 350.0 <= price <= 750.0 and supplier.lower() not in ("supplier", "500 litres", "delivers to"):
             quotes.append((price, supplier))
 
     if not quotes:
+        # Print the exact table portion so we can see it in logs if anything ever changes
+        idx = text.find("Showing ")
+        print("Table snippet:", text[idx:idx+700] if idx != -1 else text[:700])
         raise RuntimeError(f"Could not parse supplier rows from {TARGET_URL}")
 
-    # Sort cheapest first
     quotes.sort(key=lambda x: x[0])
     best_price, best_supplier = quotes[0]
     print(f"Found {len(quotes)} quotes for {area_label}. Cheapest: {best_supplier} at £{best_price:.2f}")
