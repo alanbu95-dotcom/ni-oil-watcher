@@ -7,10 +7,9 @@ from bs4 import BeautifulSoup
 NTFY_TOPIC = os.environ["NTFY_TOPIC"].strip()
 STATE_FILE = "price_state.json"
 
-SOURCES = [
-    ("CheapestOil NI", "https://www.cheapestoil.co.uk/Heating-Oil-NI"),
-    ("OilCompare NI", "https://oilcompare.co.uk/northern-ireland"),
-]
+# Change this to your town slug on CheapestOil (e.g., "lisburn", "belfast", "bangor", "newry", "ballymena")
+AREA_SLUG = "lisburn"
+TARGET_URL = f"https://www.cheapestoil.co.uk/heating-oil-prices/{AREA_SLUG}"
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
@@ -18,48 +17,55 @@ HEADERS = {
     "Accept-Language": "en-GB,en;q=0.9",
 }
 
-def fetch_current_price():
-    errors = []
-    for name, url in SOURCES:
-        try:
-            resp = requests.get(url, headers=HEADERS, timeout=20)
-            print(f"[{name}] HTTP {resp.status_code}")
-            resp.raise_for_status()
-            soup = BeautifulSoup(resp.text, "html.parser")
-            text = soup.get_text(" ", strip=True)
+def fetch_local_best_quote():
+    resp = requests.get(TARGET_URL, headers=HEADERS, timeout=20)
+    print(f"[{AREA_SLUG.title()}] HTTP {resp.status_code}")
+    resp.raise_for_status()
 
-            # Look for explicit 500L quote patterns (e.g. "500 litres from £480" or "500 litres | 96.8p | £484")
-            m500 = re.search(r"500\s*litres?[^£]{0,30}£\s*(\d{3}(?:\.\d{2})?)", text, re.IGNORECASE)
-            if m500:
-                price = float(m500.group(1))
-                if 350.0 <= price <= 750.0:
-                    print(f"[{name}] Matched 500L quote: £{price:.2f}")
-                    return price, name
+    soup = BeautifulSoup(resp.text, "html.parser")
+    text = soup.get_text(" | ", strip=True)
 
-            # Fallback: scan for any 500L-range GBP quote (£380 - £750)
-            matches = re.findall(r"£\s*(\d{3}(?:\.\d{2})?)", text)
-            prices = [float(p) for p in matches if 380.0 <= float(p) <= 750.0]
-            if prices:
-                price = min(prices)
-                print(f"[{name}] Matched lowest GBP quote: £{price:.2f}")
-                return price, name
+    # CheapestOil town pages list each supplier block with:
+    # "500 litres: £491.99 | 98.4 ppl | 900 litres: £858.59 | 95.4 ppl | Port Fuels | Updated..."
+    pattern = re.compile(
+        r"500\s*litres:\s*£\s*(\d{3}(?:\.\d{2})?)\s*\|\s*[\d.]+\s*ppl\s*\|\s*900\s*litres:\s*£\s*[\d,.]+\s*\|\s*[\d.]+\s*ppl\s*\|\s*([^|]+?)\s*\|\s*Updated",
+        re.IGNORECASE,
+    )
 
-            errors.append(f"{name}: Page loaded but no £380-£750 quote found")
-        except Exception as e:
-            print(f"[{name}] Failed: {e}")
-            errors.append(f"{name}: {e}")
+    quotes = []
+    for match in pattern.finditer(text):
+        price = float(match.group(1))
+        supplier = match.group(2).strip()
+        if 350.0 <= price <= 750.0 and len(supplier) > 2:
+            quotes.append((price, supplier))
 
-    raise RuntimeError("All sources failed -> " + " | ".join(errors))
+    if not quotes:
+        raise RuntimeError(f"Could not parse supplier quotes from {TARGET_URL}")
+
+    # Sort cheapest first
+    quotes.sort(key=lambda x: x[0])
+    best_price, best_supplier = quotes[0]
+    print(f"Found {len(quotes)} local suppliers. Cheapest: {best_supplier} at £{best_price:.2f}")
+    return best_price, best_supplier
 
 def load_last_state():
     if os.path.exists(STATE_FILE):
         with open(STATE_FILE, "r") as f:
             return json.load(f)
-    return {"last_price": None, "trend": "unknown"}
+    return {"last_price": None, "trend": "unknown", "supplier": None}
 
-def save_state(price, trend, source):
+def save_state(price, trend, supplier):
     with open(STATE_FILE, "w") as f:
-        json.dump({"last_price": price, "trend": trend, "source": source}, f, indent=2)
+        json.dump(
+            {
+                "area": AREA_SLUG,
+                "last_price": price,
+                "supplier": supplier,
+                "trend": trend,
+            },
+            f,
+            indent=2,
+        )
 
 def send_alert(title, message, priority="high", tags="chart_with_upwards_trend"):
     r = requests.post(
@@ -75,15 +81,16 @@ def send_alert(title, message, priority="high", tags="chart_with_upwards_trend")
     r.raise_for_status()
 
 def main():
-    current_price, source = fetch_current_price()
+    current_price, supplier = fetch_local_best_quote()
     state = load_last_state()
-    last_price = state["last_price"]
+    last_price = state.get("last_price")
+    area_name = AREA_SLUG.replace("-", " ").title()
 
-    if last_price is None:
-        save_state(current_price, "baseline", source)
+    if last_price is None or state.get("area") != AREA_SLUG:
+        save_state(current_price, "baseline", supplier)
         send_alert(
-            "NI Oil Monitor Active",
-            f"Baseline 500L lowest NI quote recorded at £{current_price:.2f} (via {source}).",
+            f"NI Oil Monitor Active ({area_name})",
+            f"Cheapest 500L in {area_name}: £{current_price:.2f} with {supplier}.",
             priority="default",
             tags="white_check_mark",
         )
@@ -92,25 +99,25 @@ def main():
     diff = round(current_price - last_price, 2)
 
     if diff > 0:
-        save_state(current_price, "up", source)
+        save_state(current_price, "up", supplier)
         send_alert(
-            f"BUY ALERT: NI Oil Up +£{diff:.2f}",
-            f"Lowest 500L quote rose from £{last_price:.2f} to £{current_price:.2f} (via {source}).",
+            f"BUY ALERT ({area_name}): Up +£{diff:.2f}",
+            f"Cheapest 500L rose from £{last_price:.2f} to £{current_price:.2f} ({supplier}). Reversal detected!",
             priority="urgent",
             tags="rotating_light,chart_with_upwards_trend",
         )
-    elif diff == 0 and state["trend"] == "down":
-        save_state(current_price, "flat", source)
+    elif diff == 0 and state.get("trend") == "down":
+        save_state(current_price, "flat", supplier)
         send_alert(
-            f"FLOOR DETECTED: NI Oil Holding at £{current_price:.2f}",
-            f"Price stopped dropping and held steady at £{current_price:.2f} (via {source}).",
+            f"FLOOR DETECTED ({area_name}): £{current_price:.2f}",
+            f"Price stopped falling and held at £{current_price:.2f} with {supplier}.",
             priority="high",
             tags="pause_button,fuelpump",
         )
     elif diff < 0:
-        save_state(current_price, "down", source)
+        save_state(current_price, "down", supplier)
     else:
-        save_state(current_price, "flat", source)
+        save_state(current_price, "flat", supplier)
 
 if __name__ == "__main__":
     main()
