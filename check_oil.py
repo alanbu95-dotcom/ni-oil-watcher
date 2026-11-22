@@ -4,25 +4,31 @@ import re
 import requests
 from bs4 import BeautifulSoup
 
-NTFY_TOPIC = os.environ["NTFY_TOPIC"]
+NTFY_TOPIC = os.environ["NTFY_TOPIC"].strip()
 STATE_FILE = "price_state.json"
 
-TARGET_URL = "https://www.cheapestheatingoil.co.uk/northern-ireland/"
+TARGET_URL = "https://www.cheapestoil.co.uk/Heating-Oil-NI"
 HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
 }
 
 def fetch_current_price():
     resp = requests.get(TARGET_URL, headers=HEADERS, timeout=20)
+    print(f"HTTP status: {resp.status_code}")
     resp.raise_for_status()
     soup = BeautifulSoup(resp.text, "html.parser")
     text = soup.get_text(" ", strip=True)
-    
+
+    # First look specifically for the 500 litres quote on CheapestOil NI
+    m500 = re.search(r"500\s*litres?\s*from\s*£\s*(\d{3}(?:\.\d{2})?)", text, re.IGNORECASE)
+    if m500:
+        return float(m500.group(1))
+
+    # Fallback: scan for any 500L-range GBP quote (£380 - £750)
     matches = re.findall(r"£\s*(\d{3}(?:\.\d{2})?)", text)
-    prices = [float(p) for p in matches if 350.0 <= float(p) <= 750.0]
-    
+    prices = [float(p) for p in matches if 380.0 <= float(p) <= 750.0]
     if not prices:
-        raise ValueError("Could not parse a valid 500L GBP price from page.")
+        raise ValueError("Could not find a valid 500L GBP quote on the page.")
     return min(prices)
 
 def load_last_state():
@@ -36,7 +42,7 @@ def save_state(price, trend):
         json.dump({"last_price": price, "trend": trend}, f, indent=2)
 
 def send_alert(title, message, priority="high", tags="chart_with_upwards_trend"):
-    requests.post(
+    r = requests.post(
         f"https://ntfy.sh/{NTFY_TOPIC}",
         data=message.encode("utf-8"),
         headers={
@@ -46,9 +52,11 @@ def send_alert(title, message, priority="high", tags="chart_with_upwards_trend")
         },
         timeout=15,
     )
+    r.raise_for_status()
 
 def main():
     current_price = fetch_current_price()
+    print(f"Fetched NI 500L lowest price: £{current_price:.2f}")
     state = load_last_state()
     last_price = state["last_price"]
 
@@ -56,7 +64,7 @@ def main():
         save_state(current_price, "baseline")
         send_alert(
             "NI Oil Monitor Active",
-            f"Baseline 500L lowest quote recorded at £{current_price:.2f}.",
+            f"Baseline 500L lowest NI quote recorded at £{current_price:.2f}.",
             priority="default",
             tags="white_check_mark",
         )
@@ -76,7 +84,7 @@ def main():
         save_state(current_price, "flat")
         send_alert(
             f"FLOOR DETECTED: NI Oil Holding at £{current_price:.2f}",
-            f"Price stopped dropping and held steady at £{current_price:.2f} over the last check.",
+            f"Price stopped dropping and held steady at £{current_price:.2f}.",
             priority="high",
             tags="pause_button,fuelpump",
         )
@@ -87,4 +95,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-  
+    
