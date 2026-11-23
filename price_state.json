@@ -2,10 +2,10 @@
   "area": "BT28",
   "best_price": 485.0,
   "supplier": "Oil Direct",
-  "top5_avg": 488.39,
+  "top5_avg": 486.0,
   "median": 496.5,
   "quote_count": 48,
-  "trend": "baseline",
+  "trend": "down",
   "flat_hours": 0,
   "floor_alerted": false
 }
