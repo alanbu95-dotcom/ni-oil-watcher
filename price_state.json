@@ -4,8 +4,8 @@
   "supplier": "Port Fuels",
   "top5_avg": 483.96,
   "median": 495.0,
-  "quote_count": 48,
+  "quote_count": 46,
   "trend": "stalling",
-  "flat_hours": 2,
+  "flat_hours": 3,
   "floor_alerted": false
 }
