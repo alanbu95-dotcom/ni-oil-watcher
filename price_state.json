@@ -5,7 +5,7 @@
   "top5_avg": 483.96,
   "median": 495.0,
   "quote_count": 48,
-  "trend": "down",
-  "flat_hours": 0,
+  "trend": "stalling",
+  "flat_hours": 1,
   "floor_alerted": false
 }
