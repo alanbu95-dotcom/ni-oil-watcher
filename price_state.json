@@ -2,10 +2,10 @@
   "area": "BT28",
   "best_price": 480.38,
   "supplier": "Riverside Oils",
-  "top5_avg": 481.9,
-  "median": 491.14,
+  "top5_avg": 481.71,
+  "median": 489.75,
   "quote_count": 48,
-  "trend": "down",
-  "flat_hours": 0,
+  "trend": "stalling",
+  "flat_hours": 1,
   "floor_alerted": false
 }
