@@ -2,10 +2,12 @@
   "area": "BT28",
   "best_price": 476.01,
   "supplier": "Heat Direct Lisburn",
-  "top5_avg": 478.0,
+  "top5_avg": 479.52,
   "median": 485.0,
-  "quote_count": 48,
-  "trend": "down",
+  "quote_count": 24,
+  "uk_ppl": 93.65,
+  "uk_dir": "baseline",
+  "trend": "baseline",
   "flat_hours": 0,
   "floor_alerted": false
 }
