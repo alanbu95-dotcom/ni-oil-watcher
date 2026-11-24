@@ -1,11 +1,11 @@
 {
   "area": "BT28",
-  "best_price": 482.39,
-  "supplier": "Port Fuels",
-  "top5_avg": 483.35,
-  "median": 494.5,
+  "best_price": 480.38,
+  "supplier": "Riverside Oils",
+  "top5_avg": 481.9,
+  "median": 491.14,
   "quote_count": 48,
-  "trend": "stalling",
-  "flat_hours": 3,
+  "trend": "down",
+  "flat_hours": 0,
   "floor_alerted": false
 }
