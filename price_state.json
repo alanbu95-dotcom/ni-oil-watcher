@@ -3,9 +3,9 @@
   "best_price": 480.38,
   "supplier": "Riverside Oils",
   "top5_avg": 481.71,
-  "median": 489.75,
+  "median": 489.0,
   "quote_count": 48,
   "trend": "stalling",
-  "flat_hours": 1,
+  "flat_hours": 2,
   "floor_alerted": false
 }
