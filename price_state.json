@@ -1,13 +1,13 @@
 {
   "area": "BT28",
-  "best_price": 475.39,
-  "supplier": "Port Fuels",
-  "top5_avg": 477.48,
-  "median": 484.65,
-  "quote_count": 24,
-  "uk_ppl": 93.65,
-  "uk_dir": "flat",
-  "trend": "floor",
-  "flat_hours": 4,
-  "floor_alerted": true
+  "best_price": 475.0,
+  "supplier": "Heat Direct Lisburn",
+  "top5_avg": 476.88,
+  "median": 483.0,
+  "quote_count": 25,
+  "uk_ppl": 93.64,
+  "uk_dir": "down",
+  "trend": "down",
+  "flat_hours": 0,
+  "floor_alerted": false
 }
