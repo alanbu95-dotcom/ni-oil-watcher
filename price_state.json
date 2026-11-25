@@ -1,12 +1,12 @@
 {
   "area": "BT28",
   "best_price": 475.0,
-  "supplier": "Heat Direct Lisburn",
-  "top5_avg": 476.88,
-  "median": 483.0,
+  "supplier": "CBS Fuels",
+  "top5_avg": 475.87,
+  "median": 480.0,
   "quote_count": 25,
   "uk_ppl": 93.64,
-  "uk_dir": "down",
+  "uk_dir": "flat",
   "trend": "down",
   "flat_hours": 0,
   "floor_alerted": false
