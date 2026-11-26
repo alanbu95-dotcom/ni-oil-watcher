@@ -2,12 +2,12 @@
   "area": "BT28",
   "best_price": 468.29,
   "supplier": "Port Fuels",
-  "top5_avg": 470.26,
-  "median": 478.8,
+  "top5_avg": 469.66,
+  "median": 478.0,
   "quote_count": 25,
-  "uk_ppl": 95.0,
-  "uk_dir": "up",
-  "trend": "stalling",
-  "flat_hours": 2,
+  "uk_ppl": 94.5,
+  "uk_dir": "down",
+  "trend": "down",
+  "flat_hours": 0,
   "floor_alerted": false
 }
