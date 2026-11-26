@@ -1,13 +1,13 @@
 {
   "area": "BT28",
-  "best_price": 470.0,
-  "supplier": "Lagan Oils",
-  "top5_avg": 472.45,
+  "best_price": 468.29,
+  "supplier": "Port Fuels",
+  "top5_avg": 470.26,
   "median": 478.8,
   "quote_count": 25,
   "uk_ppl": 93.64,
   "uk_dir": "flat",
-  "trend": "floor",
-  "flat_hours": 4,
-  "floor_alerted": true
+  "trend": "down",
+  "flat_hours": 0,
+  "floor_alerted": false
 }
