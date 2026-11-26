@@ -5,9 +5,9 @@
   "top5_avg": 470.26,
   "median": 478.8,
   "quote_count": 25,
-  "uk_ppl": 93.64,
-  "uk_dir": "flat",
+  "uk_ppl": 95.0,
+  "uk_dir": "up",
   "trend": "stalling",
-  "flat_hours": 1,
+  "flat_hours": 2,
   "floor_alerted": false
 }
