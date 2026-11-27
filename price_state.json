@@ -7,7 +7,7 @@
   "quote_count": 26,
   "uk_ppl": 94.5,
   "uk_dir": "flat",
-  "trend": "stalling",
-  "flat_hours": 3,
-  "floor_alerted": false
+  "trend": "floor",
+  "flat_hours": 4,
+  "floor_alerted": true
 }
