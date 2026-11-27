@@ -6,8 +6,8 @@
   "median": 475.0,
   "quote_count": 26,
   "uk_ppl": 94.2,
-  "uk_dir": "down",
-  "trend": "down",
-  "flat_hours": 0,
+  "uk_dir": "flat",
+  "trend": "stalling",
+  "flat_hours": 1,
   "floor_alerted": false
 }
