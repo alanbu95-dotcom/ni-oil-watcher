@@ -2,12 +2,12 @@
   "area": "BT28",
   "best_price": 464.98,
   "supplier": "Lisburn Fuels",
-  "top5_avg": 466.67,
+  "top5_avg": 466.47,
   "median": 475.0,
   "quote_count": 26,
   "uk_ppl": 93.64,
   "uk_dir": "flat",
   "trend": "stalling",
-  "flat_hours": 1,
+  "flat_hours": 2,
   "floor_alerted": false
 }
