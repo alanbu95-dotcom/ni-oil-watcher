@@ -1,13 +1,13 @@
 {
   "area": "BT28",
-  "best_price": 466.12,
-  "supplier": "Port Fuels",
-  "top5_avg": 467.72,
+  "best_price": 465.0,
+  "supplier": "Alfa Oils Belfast",
+  "top5_avg": 467.27,
   "median": 475.0,
   "quote_count": 26,
   "uk_ppl": 93.64,
   "uk_dir": "flat",
-  "trend": "stalling",
-  "flat_hours": 3,
+  "trend": "down",
+  "flat_hours": 0,
   "floor_alerted": false
 }
