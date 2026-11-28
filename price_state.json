@@ -1,13 +1,13 @@
 {
   "area": "BT28",
-  "best_price": 464.98,
-  "supplier": "Lisburn Fuels",
-  "top5_avg": 466.47,
+  "best_price": 462.0,
+  "supplier": "Alfa Oils Belfast",
+  "top5_avg": 465.87,
   "median": 475.0,
   "quote_count": 26,
   "uk_ppl": 93.64,
   "uk_dir": "flat",
-  "trend": "floor",
-  "flat_hours": 4,
-  "floor_alerted": true
+  "trend": "down",
+  "flat_hours": 0,
+  "floor_alerted": false
 }
